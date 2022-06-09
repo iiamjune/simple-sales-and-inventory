@@ -1,3 +1,0 @@
-Mouse: [{'quantity': 12}, {'price': 2300.0}]
-Monitor: [{'quantity': 2}, {'price': 28999.0}]
-Mechanical Keyboard: [{'quantity': 15}, {'price': 3600.0}]
