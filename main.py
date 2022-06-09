@@ -1,9 +1,11 @@
 from cgitb import text
+from email import message
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 from turtle import dot, width
 from wsgiref import validate
+import os.path
 
 window = Tk()
 window.title("Sales and Inventory")
@@ -49,36 +51,36 @@ def add_items():
 
     if not addinput_itemname.get() or len(addinput_itemname.get().strip()) == 0:
         itemname_iscorrect = False
-        messagebox.showinfo('Error', 'Please enter item name')
+        messagebox.showerror('Error', 'Please enter item name')
     else:
         itemname_iscorrect = True
         item_name = addinput_itemname.get().strip().title()
 
     if not addinput_price.get() or addinput_price.get() == '.' or float(addinput_price.get()) == 0:
         price_iscorrect = False
-        messagebox.showinfo('Error', 'Please enter item price')
+        messagebox.showerror('Error', 'Please enter item price')
     else:
         price_iscorrect = True
         item_price = float(addinput_price.get())
     
     if not addinput_quantity.get() or float(addinput_quantity.get()) == 0:
         quantity_iscorrect = False
-        messagebox.showinfo('Error', 'Please enter item quantity')
+        messagebox.showerror('Error', 'Please enter item quantity')
     else:
         quantity_iscorrect = True
         item_quantity = int(addinput_quantity.get())
     
     if itemname_iscorrect and price_iscorrect and quantity_iscorrect:
-        if item_name in items_dict:
-            messagebox.showinfo('Error', 'Item already exists')
+        invItems = getInvItems()
+        if item_name in invItems.keys():
+            messagebox.showerror('Error', 'Item already exists')
         else:
             items_dict[item_name] = [{"quantity":item_quantity}, {"price":item_price}]
-            messagebox.showinfo("Success", "Item added")
             add_back()
             addinput_itemname.set('')
             addinput_price.set('')
             addinput_quantity.set('')
-        add_items_to_file(items_dict, clear=False)
+            add_items_to_file(items_dict, clear=False)
 
 def add_items_to_file(items_dict: dict, clear: bool):
     if clear:
@@ -98,15 +100,21 @@ def add_items_to_file(items_dict: dict, clear: bool):
         for item in items_dict:
             file.write(f"{item}: {items_dict[item]}")
             file.write('\n')
+        messagebox.showinfo("Success", "Item added")
 
 def getInvItems():
     invItems = {}
-    with open('inventory.txt', 'r') as file:
-        for line in file:
-            line = line.replace('\n','').split(' ')
-            item_name, item_quantity, item_price = line[0].replace(':',''), line[2].replace('},',''), line[4].replace('}]','')
-            invItems.update({item_name: [{"quantity":int(item_quantity)}, {"price":float(item_price)}]})
 
+    if os.path.exists('inventory.txt') == False:
+        f = open('inventory.txt', 'w')
+        f.close()
+    else:
+        with open('inventory.txt', 'r') as file:
+            for line in file:
+                line = line.replace('\n','').split(' ')
+                item_name, item_quantity, item_price = line[0].replace(':',''), line[2].replace('},',''), line[4].replace('}]','')
+                invItems.update({item_name: [{"quantity":int(item_quantity)}, {"price":float(item_price)}]})
+    
     return invItems
 
 def add_window():
