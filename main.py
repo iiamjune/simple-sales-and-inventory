@@ -333,25 +333,5 @@ def main_window():
             y=490,
             anchor=CENTER)
 
-
-# var1 = IntVar()
-# Checkbutton(window, text="Item 1", variable=var1).place(x=5, y=50)
-
-# var_dropdown = StringVar()
-# items_dropdown = OptionMenu(window, var_dropdown, *list(items_dict.items()))
-# items_dropdown.pack()
-# items_dropdown.place(x=5, y=80)
-
-# cols = ("Item", "Price")
-# grid_items = ttk.Treeview(window, columns=cols, show="headings")
-
-# for col in cols:
-#     grid_items.heading(col, text=col)
-#     grid_items.grid(row=1, column=0, columnspan=2)
-#     # grid_items.place(x=10, y=100)
-# grid_items.column("Item", width=500, stretch=NO)
-# grid_items.column("Price", stretch=NO)
-# grid_items.pack()
-
 main_window()
 window.mainloop()
