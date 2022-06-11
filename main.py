@@ -139,8 +139,9 @@ def add_window():
         width=5,
         background='#2C4C71',
         foreground='#E9EEF3').place(
-            relx=.03,
-            y=40)
+            relx=.04,
+            y=40,
+            anchor=CENTER)
     Label(
         add_frame,
         text='Item Name',
@@ -208,8 +209,79 @@ def add_window():
             y=490,
             anchor=CENTER)
 
+def view_back():
+    main_window()
+
+def edit_item():
+    pass
+
+def delete_item():
+    pass
+
 def view_window():
-    print('View')
+    view_frame = Frame(window, width=800, height=600)
+    view_frame.tk_setPalette(background='#E9EEF3', foreground='#2C4C71')
+    view_frame.grid(row=0, column=0, sticky=NW)
+    view_frame.propagate(0)
+    view_frame.update()
+
+    Label(
+        view_frame,
+        text='View Item(s)',
+        font='Arial 18 bold').place(
+            relx=.5,
+            y=40,
+            anchor=CENTER)
+    Button(
+        view_frame,
+        text='Back',
+        command=view_back,
+        height=2,
+        width=5,
+        background='#2C4C71',
+        foreground='#E9EEF3').place(
+            relx=.04,
+            y=40,
+            anchor=CENTER)
+
+    cols = ('Item Name', 'Quantity', 'Price')
+    view_datagrid = ttk.Treeview(view_frame, columns=cols, show='headings')
+
+    for col in cols:
+        view_datagrid.heading(col, text=col)
+        view_datagrid.grid(row=1, column=0, columnspan=2)
+        view_datagrid.place(relx=.5, rely=.4, anchor=CENTER)
+    
+    tempInvList = []
+    for key, value in getInvItems().items():
+        tempInvList.append([key,value[0]['quantity'],value[1]['price']])
+    tempInvList.sort(key=lambda x: x[2])
+    for i in enumerate(tempInvList, start=1):
+        view_datagrid.insert('', 'end', values=(i[1][0],i[1][1],i[1][2]))
+    
+    Button(
+        view_frame,
+        text='EDIT',
+        command=edit_item,
+        height=8,
+        width=30,
+        background='#2C4C71',
+        foreground='#E9EEF3').place(
+            relx=.3,
+            y=490,
+            anchor=CENTER)
+    
+    Button(
+        view_frame,
+        text='DELETE',
+        command=delete_item,
+        height=8,
+        width=30,
+        background='#2C4C71',
+        foreground='#E9EEF3').place(
+            relx=.7,
+            y=490,
+            anchor=CENTER)
 
 def purchase_window():
     print('Purchase')

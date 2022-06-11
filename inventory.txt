@@ -1,0 +1,4 @@
+Mouse: [{'quantity': 23}, {'price': 2600.0}]
+Keyboard: [{'quantity': 12}, {'price': 3500.0}]
+Monitor: [{'quantity': 15}, {'price': 28000.0}]
+Hdd: [{'quantity': 6}, {'price': 3000.0}]
