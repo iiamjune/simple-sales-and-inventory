@@ -212,6 +212,9 @@ def add_window():
 
 def view_back():
     main_window()
+    editinput_itemname.set('')
+    editinput_price.set('')
+    editinput_quantity.set('')
 
 def bind_item(e):
     value_list = []
@@ -262,7 +265,7 @@ def view_window():
     cols = ('Item Name', 'Quantity', 'Price')
     view_treeview = ttk.Treeview(view_frame, columns=cols, show='headings')
     view_treeview.bind('<ButtonRelease-1>', bind_item)
-    
+
     for col in cols:
         view_treeview.heading(col, text=col)
         view_treeview.grid(row=1, column=0, columnspan=2)
