@@ -1,5 +1,6 @@
 from cgitb import text
 from email import message
+from select import select
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -11,12 +12,6 @@ window = Tk()
 window.title("Sales and Inventory")
 window.geometry("800x600")
 window.resizable(False, False)
-global add_e1
-global add_e2
-global add_e3
-global e4
-global total
-global balance
 global items_dict
 
 style = ttk.Style()
@@ -27,6 +22,9 @@ balance = IntVar()
 addinput_itemname = StringVar()
 addinput_price = StringVar()
 addinput_quantity = StringVar()
+editinput_itemname = StringVar()
+editinput_price = StringVar()
+editinput_quantity = StringVar()
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -53,8 +51,11 @@ def add_items():
         itemname_iscorrect = False
         messagebox.showerror('Error', 'Please enter item name')
     else:
-        itemname_iscorrect = True
-        item_name = addinput_itemname.get().strip().title()
+        if ' ' in addinput_itemname.get():
+            messagebox.showerror('Warning', 'Item name cannot contain spaces.\nUse "-" to separate item names with more than one word')
+        else:
+            itemname_iscorrect = True
+            item_name = addinput_itemname.get().strip().title()
 
     if not addinput_price.get() or addinput_price.get() == '.' or float(addinput_price.get()) == 0:
         price_iscorrect = False
@@ -113,7 +114,7 @@ def getInvItems():
             for line in file:
                 line = line.replace('\n','').split(' ')
                 item_name, item_quantity, item_price = line[0].replace(':',''), line[2].replace('},',''), line[4].replace('}]','')
-                invItems.update({item_name: [{"quantity":int(item_quantity)}, {"price":float(item_price)}]})
+                invItems.update({item_name: [{'quantity':int(item_quantity)}, {'price':float(item_price)}]})
     
     return invItems
 
@@ -148,7 +149,7 @@ def add_window():
         font='Arial 14 bold').place(
             x=60,
             y=160)
-    add_e1 = Entry(
+    Entry(
         add_frame,
         width=30,
         textvariable=addinput_itemname,
@@ -165,7 +166,7 @@ def add_window():
         font='Arial 14 bold').place(
             x=450,
             y=160)
-    add_e2 = Entry(
+    Entry(
         add_frame,
         width=25,
         textvariable=addinput_price,
@@ -184,7 +185,7 @@ def add_window():
         font='Arial 14 bold').place(
             x=450,
             y=250)
-    add_e3 = Entry(
+    Entry(
         add_frame,
         width=10,
         textvariable=addinput_quantity,
@@ -212,13 +213,27 @@ def add_window():
 def view_back():
     main_window()
 
-def edit_item():
-    pass
+def bind_item(e):
+    value_list = []
+    selected_item = view_treeview.focus()
+    for value in view_treeview.item(selected_item)['values']:
+        value_list.append(value)
+    editinput_itemname.set('')
+    editinput_itemname.set(str(value_list[0]))
+    editinput_quantity.set('')
+    editinput_quantity.set(str(value_list[1]))
+    editinput_price.set('')
+    editinput_price.set(str(value_list[2]))
 
 def delete_item():
     pass
 
+def save_item():
+    pass
+
 def view_window():
+    global view_treeview
+
     view_frame = Frame(window, width=800, height=600)
     view_frame.tk_setPalette(background='#E9EEF3', foreground='#2C4C71')
     view_frame.grid(row=0, column=0, sticky=NW)
@@ -243,32 +258,53 @@ def view_window():
             relx=.04,
             y=40,
             anchor=CENTER)
-
+    
     cols = ('Item Name', 'Quantity', 'Price')
-    view_datagrid = ttk.Treeview(view_frame, columns=cols, show='headings')
-
+    view_treeview = ttk.Treeview(view_frame, columns=cols, show='headings')
+    view_treeview.bind('<ButtonRelease-1>', bind_item)
+    
     for col in cols:
-        view_datagrid.heading(col, text=col)
-        view_datagrid.grid(row=1, column=0, columnspan=2)
-        view_datagrid.place(relx=.5, rely=.4, anchor=CENTER)
+        view_treeview.heading(col, text=col)
+        view_treeview.grid(row=1, column=0, columnspan=2)
+        view_treeview.place(relx=.5, rely=.4, anchor=CENTER)
     
     tempInvList = []
     for key, value in getInvItems().items():
         tempInvList.append([key,value[0]['quantity'],value[1]['price']])
     tempInvList.sort(key=lambda x: x[2])
     for i in enumerate(tempInvList, start=1):
-        view_datagrid.insert('', 'end', values=(i[1][0],i[1][1],i[1][2]))
+        view_treeview.insert('', 'end', values=(i[1][0],i[1][1],i[1][2]))
+    
+    
+    Label(view_frame, text='Item Name', font='Arial 8').place(x=150, y=360)
+    Entry(view_frame, width=30, textvariable=editinput_itemname, font='Arial 8').place(x=150, y=380)
+    Label(view_frame, text='Quantity', font='Arial 8').place(x=390, y=360)
+    Entry(view_frame, width=10, textvariable=editinput_quantity, font='Arial 8').place(x=390, y=380)
+    Label(view_frame, text='Price', font='Arial 8').place(x=500, y=360)
+    Entry(view_frame, width=25, textvariable=editinput_price, font='Arial 8').place(x=500, y=380)
+    
+    # Button(
+    #     view_frame,
+    #     text='EDIT',
+    #     command=edit_item,
+    #     height=8,
+    #     width=30,
+    #     background='#2C4C71',
+    #     foreground='#E9EEF3').place(
+    #         relx=.2,
+    #         y=500,
+    #         anchor=CENTER)
     
     Button(
         view_frame,
-        text='EDIT',
-        command=edit_item,
+        text='SAVE',
+        command=save_item,
         height=8,
         width=30,
         background='#2C4C71',
         foreground='#E9EEF3').place(
             relx=.3,
-            y=490,
+            y=500,
             anchor=CENTER)
     
     Button(
@@ -280,7 +316,7 @@ def view_window():
         background='#2C4C71',
         foreground='#E9EEF3').place(
             relx=.7,
-            y=490,
+            y=500,
             anchor=CENTER)
 
 def purchase_window():
