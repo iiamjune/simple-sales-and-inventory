@@ -322,7 +322,14 @@ def view_window():
     
     cols = ('Item Name', 'Quantity', 'Price')
     view_treeview = ttk.Treeview(view_frame, columns=cols, show='headings')
-    view_treeview.bind('<ButtonRelease-1>', bind_item)
+    # view_treeview.bind('<ButtonRelease-1>', bind_item)
+    
+    invItems = getInvItems()
+    if len(invItems) == 0:
+        view_treeview.unbind('<ButtonRelease-1>')
+        messagebox.showerror('Error', 'No items in inventory')
+    else:
+        view_treeview.bind('<ButtonRelease-1>', bind_item)
 
     for col in cols:
         view_treeview.heading(col, text=col)
