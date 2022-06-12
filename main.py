@@ -1,22 +1,17 @@
-from cgitb import text
-from email import message
-from select import select
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
-from turtle import dot, width
-from wsgiref import validate
 import os.path
 
 window = Tk()
 window.title("Sales and Inventory")
 window.geometry("800x600")
 window.resizable(False, False)
-global items_dict
 
 style = ttk.Style()
 style.theme_use("clam")
 
+global items_dict
 total = StringVar()
 balance = IntVar()
 addinput_itemname = StringVar()
@@ -77,11 +72,11 @@ def add_items():
             messagebox.showerror('Error', 'Item already exists')
         else:
             items_dict[item_name] = [{"quantity":item_quantity}, {"price":item_price}]
-            # add_back()
             addinput_itemname.set('')
             addinput_price.set('')
             addinput_quantity.set('')
             add_items_to_file(items_dict, clear=False, message='Item added successfully')
+            add_window()
 
 def add_items_to_file(items_dict: dict, clear: bool, message: str):
     if clear:
@@ -230,17 +225,38 @@ def bind_item(e):
     editinput_price.set(str(value_list[2]))
 
 def delete_item():
-    pass
+    itemname_iscorrect = False
+
+    if not editinput_itemname.get() or len(editinput_itemname.get().strip()) == 0:
+        itemname_iscorrect = False
+        messagebox.showerror('Error', 'Please select an item')
+    else:
+        itemname_iscorrect = True
+        item_name = editinput_itemname.get().strip().title()
+    
+    if itemname_iscorrect:
+        invItems = getInvItems()
+        item_to_delete = item_name
+        if item_to_delete in invItems.keys():
+            confirm_delete = messagebox.askyesno('Delete Item', f'Are you sure you want to delete {item_name} from the inventory?')
+            if confirm_delete:
+                del invItems[item_to_delete]
+                editinput_itemname.set('')
+                editinput_price.set('')
+                editinput_quantity.set('')
+                add_items_to_file(invItems, clear=True, message=f'{item_name} has been deleted successfully')
+                view_window()
+        else:
+            messagebox.showerror('Error', 'Item does not exist!')
 
 def update_item():
     itemname_iscorrect = False
     price_iscorrect = False
     quantity_iscorrect = False
-    items_dict = {}
 
     if not editinput_itemname.get() or len(editinput_itemname.get().strip()) == 0:
         itemname_iscorrect = False
-        messagebox.showerror('Error', 'Please enter item name')
+        messagebox.showerror('Error', 'Please select an item')
     else:
         if ' ' in editinput_itemname.get():
             messagebox.showerror('Warning', 'Item name cannot contain spaces.\nUse "-" to separate item names with more than one word.')
@@ -248,19 +264,19 @@ def update_item():
             itemname_iscorrect = True
             item_name = editinput_itemname.get().strip().title()
 
-    if not editinput_price.get() or editinput_price.get() == '.' or float(editinput_price.get()) == 0:
-        price_iscorrect = False
-        messagebox.showerror('Error', 'Please enter item price')
-    else:
-        price_iscorrect = True
-        item_price = float(editinput_price.get())
-    
-    if not editinput_quantity.get() or float(editinput_quantity.get()) == 0:
-        quantity_iscorrect = False
-        messagebox.showerror('Error', 'Please enter item quantity')
-    else:
-        quantity_iscorrect = True
-        item_quantity = int(editinput_quantity.get())
+            if not editinput_price.get() or editinput_price.get() == '.' or float(editinput_price.get()) == 0:
+                price_iscorrect = False
+                messagebox.showerror('Error', 'Please enter item price')
+            else:
+                price_iscorrect = True
+                item_price = float(editinput_price.get())
+            
+            if not editinput_quantity.get() or float(editinput_quantity.get()) == 0:
+                quantity_iscorrect = False
+                messagebox.showerror('Error', 'Please enter item quantity')
+            else:
+                quantity_iscorrect = True
+                item_quantity = int(editinput_quantity.get())
     
     if itemname_iscorrect and price_iscorrect and quantity_iscorrect:
         invItems = getInvItems()
@@ -272,6 +288,7 @@ def update_item():
             editinput_price.set('')
             editinput_quantity.set('')
             add_items_to_file(invItems, clear=True, message='Item updated successfully')
+            view_window()
         else:
             messagebox.showerror('Error', 'Item does not exist!')
 
