@@ -52,7 +52,7 @@ def add_items():
         messagebox.showerror('Error', 'Please enter item name')
     else:
         if ' ' in addinput_itemname.get():
-            messagebox.showerror('Warning', 'Item name cannot contain spaces.\nUse "-" to separate item names with more than one word')
+            messagebox.showerror('Warning', 'Item name cannot contain spaces.\nUse "-" to separate item names with more than one word.')
         else:
             itemname_iscorrect = True
             item_name = addinput_itemname.get().strip().title()
@@ -77,13 +77,13 @@ def add_items():
             messagebox.showerror('Error', 'Item already exists')
         else:
             items_dict[item_name] = [{"quantity":item_quantity}, {"price":item_price}]
-            add_back()
+            # add_back()
             addinput_itemname.set('')
             addinput_price.set('')
             addinput_quantity.set('')
-            add_items_to_file(items_dict, clear=False)
+            add_items_to_file(items_dict, clear=False, message='Item added successfully')
 
-def add_items_to_file(items_dict: dict, clear: bool):
+def add_items_to_file(items_dict: dict, clear: bool, message: str):
     if clear:
         f = open('inventory.txt', 'w')
         f.close()
@@ -91,6 +91,7 @@ def add_items_to_file(items_dict: dict, clear: bool):
             for item in items_dict:
                 file.write(f"{item}: {items_dict[item]}")
                 file.write('\n')
+            messagebox.showinfo('Success', message)
         return
     invItems = getInvItems()
 
@@ -101,7 +102,7 @@ def add_items_to_file(items_dict: dict, clear: bool):
         for item in items_dict:
             file.write(f"{item}: {items_dict[item]}")
             file.write('\n')
-        messagebox.showinfo("Success", "Item added")
+        messagebox.showinfo('Success', message)
 
 def getInvItems():
     invItems = {}
@@ -231,8 +232,48 @@ def bind_item(e):
 def delete_item():
     pass
 
-def save_item():
-    pass
+def update_item():
+    itemname_iscorrect = False
+    price_iscorrect = False
+    quantity_iscorrect = False
+    items_dict = {}
+
+    if not editinput_itemname.get() or len(editinput_itemname.get().strip()) == 0:
+        itemname_iscorrect = False
+        messagebox.showerror('Error', 'Please enter item name')
+    else:
+        if ' ' in editinput_itemname.get():
+            messagebox.showerror('Warning', 'Item name cannot contain spaces.\nUse "-" to separate item names with more than one word.')
+        else:
+            itemname_iscorrect = True
+            item_name = editinput_itemname.get().strip().title()
+
+    if not editinput_price.get() or editinput_price.get() == '.' or float(editinput_price.get()) == 0:
+        price_iscorrect = False
+        messagebox.showerror('Error', 'Please enter item price')
+    else:
+        price_iscorrect = True
+        item_price = float(editinput_price.get())
+    
+    if not editinput_quantity.get() or float(editinput_quantity.get()) == 0:
+        quantity_iscorrect = False
+        messagebox.showerror('Error', 'Please enter item quantity')
+    else:
+        quantity_iscorrect = True
+        item_quantity = int(editinput_quantity.get())
+    
+    if itemname_iscorrect and price_iscorrect and quantity_iscorrect:
+        invItems = getInvItems()
+        item_to_change = item_name
+        if item_to_change in invItems.keys():
+            invItems.update({item_name: [{'quantity':int(item_quantity)}, {'price':float(item_price)}]})
+
+            editinput_itemname.set('')
+            editinput_price.set('')
+            editinput_quantity.set('')
+            add_items_to_file(invItems, clear=True, message='Item updated successfully')
+        else:
+            messagebox.showerror('Error', 'Item does not exist!')
 
 def view_window():
     global view_treeview
@@ -278,30 +319,17 @@ def view_window():
     for i in enumerate(tempInvList, start=1):
         view_treeview.insert('', 'end', values=(i[1][0],i[1][1],i[1][2]))
     
-    
     Label(view_frame, text='Item Name', font='Arial 8').place(x=150, y=360)
-    Entry(view_frame, width=30, textvariable=editinput_itemname, font='Arial 8').place(x=150, y=380)
+    Entry(view_frame, width=30, textvariable=editinput_itemname, font='Arial 8', state=DISABLED).place(x=150, y=380)
     Label(view_frame, text='Quantity', font='Arial 8').place(x=390, y=360)
     Entry(view_frame, width=10, textvariable=editinput_quantity, font='Arial 8').place(x=390, y=380)
     Label(view_frame, text='Price', font='Arial 8').place(x=500, y=360)
     Entry(view_frame, width=25, textvariable=editinput_price, font='Arial 8').place(x=500, y=380)
     
-    # Button(
-    #     view_frame,
-    #     text='EDIT',
-    #     command=edit_item,
-    #     height=8,
-    #     width=30,
-    #     background='#2C4C71',
-    #     foreground='#E9EEF3').place(
-    #         relx=.2,
-    #         y=500,
-    #         anchor=CENTER)
-    
     Button(
         view_frame,
-        text='SAVE',
-        command=save_item,
+        text='UPDATE',
+        command=update_item,
         height=8,
         width=30,
         background='#2C4C71',
