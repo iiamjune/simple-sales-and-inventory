@@ -20,6 +20,7 @@ addinput_quantity = StringVar()
 editinput_itemname = StringVar()
 editinput_price = StringVar()
 editinput_quantity = StringVar()
+edit_searchinput = StringVar()
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -292,8 +293,20 @@ def update_item():
         else:
             messagebox.showerror('Error', 'Item does not exist!')
 
+def search_item():
+    query = edit_searchentry.get().strip().title()
+    selection = []
+    for child in view_treeview.get_children():
+        if query in view_treeview.item(child)['values']:
+            selection.append(child)
+    if len(selection) == 0:
+        messagebox.showinfo('Info', 'No results found')
+    view_treeview.selection_set(selection)
+    view_treeview.yview_scroll(len(selection), 'pages')
+
 def view_window():
     global view_treeview
+    global edit_searchentry
 
     view_frame = Frame(window, width=800, height=600)
     view_frame.tk_setPalette(background='#E9EEF3', foreground='#2C4C71')
@@ -319,14 +332,80 @@ def view_window():
             relx=.04,
             y=40,
             anchor=CENTER)
+    edit_searchentry = Entry(
+        view_frame, 
+        width=20, 
+        textvariable=edit_searchinput, 
+        font='Arial 8', 
+        foreground='black', 
+        highlightthickness=1, 
+        highlightbackground='#2C4C71', 
+        highlightcolor='#2C4C71')
+    edit_searchbutton = Button(
+        view_frame, 
+        text='Search', 
+        command=search_item, 
+        height=1, 
+        width=5, 
+        background='#2C4C71', 
+        foreground='#E9EEF3')
+    edit_itemnamelabel = Label(
+        view_frame, 
+        text='Item Name', 
+        font='Arial 8')
+    edit_itemnameentry = Entry(
+        view_frame, 
+        width=30, 
+        textvariable=editinput_itemname, 
+        font='Arial 8', 
+        state=DISABLED)
+    edit_quantitylabel = Label(
+        view_frame, 
+        text='Quantity', 
+        font='Arial 8')
+    edit_quantityentry = Entry(
+        view_frame, 
+        width=10, 
+        textvariable=editinput_quantity, 
+        font='Arial 8')
+    edit_pricelabel = Label(
+        view_frame, 
+        text='Price', 
+        font='Arial 8')
+    edit_priceentry = Entry(
+        view_frame, 
+        width=25, 
+        textvariable=editinput_price, 
+        font='Arial 8')
+    edit_updatebutton = Button(
+        view_frame,
+        text='UPDATE',
+        command=update_item,
+        height=8,
+        width=30,
+        background='#2C4C71',
+        foreground='#E9EEF3')
+    edit_deletebutton = Button(
+        view_frame,
+        text='DELETE',
+        command=delete_item,
+        height=8,
+        width=30,
+        background='#2C4C71',
+        foreground='#E9EEF3')
     
     cols = ('Item Name', 'Quantity', 'Price')
     view_treeview = ttk.Treeview(view_frame, columns=cols, show='headings')
-    # view_treeview.bind('<ButtonRelease-1>', bind_item)
     
     invItems = getInvItems()
     if len(invItems) == 0:
         view_treeview.unbind('<ButtonRelease-1>')
+        edit_searchentry.config(state='disabled')
+        edit_searchbutton.config(state='disabled')
+        edit_quantityentry.config(state='disabled')
+        edit_priceentry.config(state='disabled')
+        edit_updatebutton.config(state='disabled')
+        edit_deletebutton.config(state='disabled')
         messagebox.showerror('Error', 'No items in inventory')
     else:
         view_treeview.bind('<ButtonRelease-1>', bind_item)
@@ -343,36 +422,18 @@ def view_window():
     for i in enumerate(tempInvList, start=1):
         view_treeview.insert('', 'end', values=(i[1][0],i[1][1],i[1][2]))
     
-    Label(view_frame, text='Item Name', font='Arial 8').place(x=150, y=360)
-    Entry(view_frame, width=30, textvariable=editinput_itemname, font='Arial 8', state=DISABLED).place(x=150, y=380)
-    Label(view_frame, text='Quantity', font='Arial 8').place(x=390, y=360)
-    Entry(view_frame, width=10, textvariable=editinput_quantity, font='Arial 8').place(x=390, y=380)
-    Label(view_frame, text='Price', font='Arial 8').place(x=500, y=360)
-    Entry(view_frame, width=25, textvariable=editinput_price, font='Arial 8').place(x=500, y=380)
-    
-    Button(
-        view_frame,
-        text='UPDATE',
-        command=update_item,
-        height=8,
-        width=30,
-        background='#2C4C71',
-        foreground='#E9EEF3').place(
-            relx=.3,
-            y=500,
-            anchor=CENTER)
-    
-    Button(
-        view_frame,
-        text='DELETE',
-        command=delete_item,
-        height=8,
-        width=30,
-        background='#2C4C71',
-        foreground='#E9EEF3').place(
-            relx=.7,
-            y=500,
-            anchor=CENTER)
+    edit_searchentry.place(x=165, y=110, anchor=CENTER)
+    edit_searchbutton.place(x=250, y=110, anchor=CENTER)
+
+    edit_itemnamelabel.place(x=150, y=360)
+    edit_itemnameentry.place(x=150, y=380)
+    edit_quantitylabel.place(x=390, y=360)
+    edit_quantityentry.place(x=390, y=380)
+    edit_pricelabel.place(x=500, y=360)
+    edit_priceentry.place(x=500, y=380)
+
+    edit_updatebutton.place(relx=.3, y=500, anchor=CENTER)
+    edit_deletebutton.place(relx=.7, y=500, anchor=CENTER)
 
 def purchase_window():
     print('Purchase')
