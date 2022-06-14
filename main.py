@@ -20,7 +20,7 @@ addinput_quantity = StringVar()
 editinput_itemname = StringVar()
 editinput_price = StringVar()
 editinput_quantity = StringVar()
-edit_searchinput = StringVar()
+editinput_search = StringVar()
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -212,6 +212,7 @@ def view_back():
     editinput_itemname.set('')
     editinput_price.set('')
     editinput_quantity.set('')
+    editinput_search.set('')
 
 def bind_item(e):
     value_list = []
@@ -245,6 +246,7 @@ def delete_item():
                 editinput_itemname.set('')
                 editinput_price.set('')
                 editinput_quantity.set('')
+                editinput_search.set('')
                 add_items_to_file(invItems, clear=True, message=f'{item_name} has been deleted successfully')
                 view_window()
         else:
@@ -288,6 +290,7 @@ def update_item():
             editinput_itemname.set('')
             editinput_price.set('')
             editinput_quantity.set('')
+            editinput_search.set('')
             add_items_to_file(invItems, clear=True, message='Item updated successfully')
             view_window()
         else:
@@ -299,10 +302,12 @@ def search_item():
     for child in view_treeview.get_children():
         if query in view_treeview.item(child)['values']:
             selection.append(child)
+            editinput_itemname.set(view_treeview.item(child)['values'][0])
+            editinput_quantity.set(view_treeview.item(child)['values'][1])
+            editinput_price.set(view_treeview.item(child)['values'][2])
     if len(selection) == 0:
         messagebox.showinfo('Info', 'No results found')
     view_treeview.selection_set(selection)
-    view_treeview.yview_scroll(len(selection), 'pages')
 
 def view_window():
     global view_treeview
@@ -335,7 +340,7 @@ def view_window():
     edit_searchentry = Entry(
         view_frame, 
         width=20, 
-        textvariable=edit_searchinput, 
+        textvariable=editinput_search, 
         font='Arial 8', 
         foreground='black', 
         highlightthickness=1, 
