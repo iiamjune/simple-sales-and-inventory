@@ -1,3 +1,4 @@
+from ctypes import alignment
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -21,6 +22,9 @@ editinput_itemname = StringVar()
 editinput_price = StringVar()
 editinput_quantity = StringVar()
 editinput_search = StringVar()
+purchaseinput_search = StringVar()
+purchaseinput_itemname = StringVar()
+purchaseinput_quantity = StringVar()
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -214,7 +218,7 @@ def view_back():
     editinput_quantity.set('')
     editinput_search.set('')
 
-def bind_item(e):
+def view_binditem(e):
     value_list = []
     selected_item = view_treeview.focus()
     for value in view_treeview.item(selected_item)['values']:
@@ -296,7 +300,7 @@ def update_item():
         else:
             messagebox.showerror('Error', 'Item does not exist!')
 
-def search_item():
+def view_searchitem():
     query = edit_searchentry.get().strip().title()
     selection = []
     for child in view_treeview.get_children():
@@ -306,6 +310,9 @@ def search_item():
             editinput_quantity.set(view_treeview.item(child)['values'][1])
             editinput_price.set(view_treeview.item(child)['values'][2])
     if len(selection) == 0:
+        editinput_itemname.set('')
+        editinput_quantity.set('')
+        editinput_price.set('')
         messagebox.showinfo('Info', 'No results found')
     view_treeview.selection_set(selection)
 
@@ -349,7 +356,7 @@ def view_window():
     edit_searchbutton = Button(
         view_frame, 
         text='Search', 
-        command=search_item, 
+        command=view_searchitem, 
         height=1, 
         width=5, 
         background='#2C4C71', 
@@ -413,13 +420,14 @@ def view_window():
         edit_deletebutton.config(state='disabled')
         messagebox.showerror('Error', 'No items in inventory')
     else:
-        view_treeview.bind('<ButtonRelease-1>', bind_item)
+        view_treeview.bind('<ButtonRelease-1>', view_binditem)
 
     for col in cols:
         view_treeview.heading(col, text=col)
         view_treeview.grid(row=1, column=0, columnspan=2)
+        view_treeview.column(col, anchor='center')
         view_treeview.place(relx=.5, rely=.4, anchor=CENTER)
-    
+
     tempInvList = []
     for key, value in getInvItems().items():
         tempInvList.append([key,value[0]['quantity'],value[1]['price']])
@@ -440,8 +448,147 @@ def view_window():
     edit_updatebutton.place(relx=.3, y=500, anchor=CENTER)
     edit_deletebutton.place(relx=.7, y=500, anchor=CENTER)
 
+def purchase_back():
+    main_window()
+    purchaseinput_itemname.set('')
+    purchaseinput_quantity.set('')
+    purchaseinput_search.set('')
+
+def purchase_searchitem():
+    query = purchase_searchentry.get().strip().title()
+    selection = []
+    for child in purchase_treeview.get_children():
+        if query in purchase_treeview.item(child)['values']:
+            selection.append(child)
+            purchaseinput_itemname.set(purchase_treeview.item(child)['values'][0])
+            purchaseinput_quantity.set('1')
+    if len(selection) == 0:
+        purchaseinput_itemname.set('')
+        purchaseinput_quantity.set('')
+        messagebox.showinfo('Info', 'No results found')
+    purchase_treeview.selection_set(selection)
+
+def purchase_binditem(e):
+    value_list = []
+    selected_item = purchase_treeview.focus()
+    for value in purchase_treeview.item(selected_item)['values']:
+        value_list.append(value)
+    purchaseinput_itemname.set('')
+    purchaseinput_itemname.set(str(value_list[0]))
+    purchaseinput_quantity.set('')
+    purchaseinput_quantity.set('1')
+
+def purchase_additem():
+    pass
+
 def purchase_window():
-    print('Purchase')
+    global purchase_treeview
+    global purchase_searchentry
+
+    purchase_frame = Frame(window, width=800, height=600)
+    purchase_frame.tk_setPalette(background='#E9EEF3', foreground='#2C4C71')
+    purchase_frame.grid(row=0, column=0, sticky=NW)
+    purchase_frame.propagate(0)
+    purchase_frame.update()
+
+    Label(
+        purchase_frame,
+        text='Purchase Item(s)',
+        font='Arial 18 bold').place(
+            relx=.5,
+            y=40,
+            anchor=CENTER)
+    Button(
+        purchase_frame,
+        text='Back',
+        command=purchase_back,
+        height=2,
+        width=5,
+        background='#2C4C71',
+        foreground='#E9EEF3').place(
+            relx=.04,
+            y=40,
+            anchor=CENTER)
+    purchase_searchentry = Entry(
+        purchase_frame, 
+        width=20, 
+        textvariable=purchaseinput_search, 
+        font='Arial 8', 
+        foreground='black', 
+        highlightthickness=1, 
+        highlightbackground='#2C4C71', 
+        highlightcolor='#2C4C71')
+    purchase_searchbutton = Button(
+        purchase_frame, 
+        text='Search', 
+        command=purchase_searchitem, 
+        height=1, 
+        width=5, 
+        background='#2C4C71', 
+        foreground='#E9EEF3')
+    purchase_itemnamelabel = Label(
+        purchase_frame, 
+        text='Item Name', 
+        font='Arial 8')
+    purchase_itemnameentry = Entry(
+        purchase_frame, 
+        width=30, 
+        textvariable=purchaseinput_itemname, 
+        font='Arial 8', 
+        state=DISABLED)
+    purchase_quantitylabel = Label(
+        purchase_frame, 
+        text='Quantity', 
+        font='Arial 8')
+    purchase_quantityentry = Entry(
+        purchase_frame, 
+        width=10, 
+        textvariable=purchaseinput_quantity, 
+        font='Arial 8')
+    purchase_addbutton = Button(
+        purchase_frame, 
+        text='Add', 
+        command=purchase_additem, 
+        height=1, 
+        width=5, 
+        background='#2C4C71', 
+        foreground='#E9EEF3')
+    
+    cols = ('Item Name', 'Quantity', 'Price')
+    purchase_treeview = ttk.Treeview(purchase_frame, columns=cols, show='headings')
+    
+    invItems = getInvItems()
+    if len(invItems) == 0:
+        purchase_treeview.unbind('<ButtonRelease-1>')
+        purchase_searchentry.config(state='disabled')
+        purchase_searchbutton.config(state='disabled')
+        purchase_quantityentry.config(state='disabled')
+        purchase_addbutton.config(state='disabled')
+        messagebox.showerror('Error', 'No items in inventory')
+    else:
+        purchase_treeview.bind('<ButtonRelease-1>', purchase_binditem)
+
+    for col in cols:
+        purchase_treeview.heading(col, text=col)
+        purchase_treeview.grid(row=1, column=0, columnspan=2)
+        purchase_treeview.column(col, anchor='center')
+        purchase_treeview.place(relx=.5, rely=.4, anchor=CENTER)
+
+    tempInvList = []
+    for key, value in getInvItems().items():
+        tempInvList.append([key,value[0]['quantity'],value[1]['price']])
+    tempInvList.sort(key=lambda x: x[2])
+    for i in enumerate(tempInvList, start=1):
+        purchase_treeview.insert('', 'end', values=(i[1][0],i[1][1],i[1][2]))
+    
+    purchase_searchentry.place(x=165, y=110, anchor=CENTER)
+    purchase_searchbutton.place(x=250, y=110, anchor=CENTER)
+
+    purchase_itemnamelabel.place(x=150, y=360)
+    purchase_itemnameentry.place(x=150, y=380)
+    purchase_quantitylabel.place(x=390, y=360)
+    purchase_quantityentry.place(x=390, y=380)
+    purchase_addbutton.place(x=500, y=370)
 
 def main_window():
     main_frame = Frame(window, width=800, height=600)
