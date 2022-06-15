@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import os.path
+from turtle import width
 
 window = Tk()
 window.title("Sales and Inventory")
@@ -25,6 +26,7 @@ editinput_search = StringVar()
 purchaseinput_search = StringVar()
 purchaseinput_itemname = StringVar()
 purchaseinput_quantity = StringVar()
+purchase_carttotal = StringVar()
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -473,12 +475,22 @@ def purchase_binditem(e):
     selected_item = purchase_treeview.focus()
     for value in purchase_treeview.item(selected_item)['values']:
         value_list.append(value)
-    purchaseinput_itemname.set('')
-    purchaseinput_itemname.set(str(value_list[0]))
-    purchaseinput_quantity.set('')
-    purchaseinput_quantity.set('1')
+    if len(value_list) > 0:
+        purchaseinput_itemname.set('')
+        purchaseinput_itemname.set(str(value_list[0]))
+        purchaseinput_quantity.set('')
+        purchaseinput_quantity.set('1')
 
 def purchase_additem():
+    pass
+
+def purchase_removeitem():
+    pass
+
+def purchase_buyitems():
+    pass
+
+def purchase_bindcartitem(e):
     pass
 
 def purchase_window():
@@ -553,6 +565,26 @@ def purchase_window():
         width=5, 
         background='#2C4C71', 
         foreground='#E9EEF3')
+    purchase_removebutton = Button(
+        purchase_frame, 
+        text='Remove', 
+        command=purchase_removeitem, 
+        height=1, 
+        width=6, 
+        background='#2C4C71', 
+        foreground='#E9EEF3')
+    purchase_buybutton = Button(
+        purchase_frame, 
+        text='Buy', 
+        command=purchase_buyitems, 
+        height=1, 
+        width=6, 
+        background='#2C4C71', 
+        foreground='#E9EEF3')
+    purchase_totallabel = Label(
+        purchase_frame, 
+        textvariable=purchase_carttotal, 
+        font='Arial 14 bold')
     
     cols = ('Item Name', 'Quantity', 'Price')
     purchase_treeview = ttk.Treeview(purchase_frame, columns=cols, show='headings')
@@ -571,7 +603,7 @@ def purchase_window():
     for col in cols:
         purchase_treeview.heading(col, text=col)
         purchase_treeview.grid(row=1, column=0, columnspan=2)
-        purchase_treeview.column(col, anchor='center')
+        purchase_treeview.column(col, anchor=CENTER)
         purchase_treeview.place(relx=.5, rely=.4, anchor=CENTER)
 
     tempInvList = []
@@ -584,11 +616,34 @@ def purchase_window():
     purchase_searchentry.place(x=165, y=110, anchor=CENTER)
     purchase_searchbutton.place(x=250, y=110, anchor=CENTER)
 
-    purchase_itemnamelabel.place(x=150, y=360)
-    purchase_itemnameentry.place(x=150, y=380)
-    purchase_quantitylabel.place(x=390, y=360)
-    purchase_quantityentry.place(x=390, y=380)
-    purchase_addbutton.place(x=500, y=370)
+    purchase_itemnamelabel.place(x=180, y=360)
+    purchase_itemnameentry.place(x=180, y=380)
+    purchase_quantitylabel.place(x=420, y=360)
+    purchase_quantityentry.place(x=420, y=380)
+    purchase_addbutton.place(x=530, y=370)
+
+    cart_cols = ('Item Name', 'Subtotal')
+    purchase_carttreeview = ttk.Treeview(purchase_frame, columns=cart_cols, show='headings', height=6)
+
+    if len(invItems) == 0:
+        purchase_carttreeview.unbind('<ButtonRelease-1>')
+        purchase_removebutton.config(state='disabled')
+        purchase_buybutton.config(state='disabled')
+    else:
+        purchase_carttreeview.bind('<ButtonRelease-1>', purchase_bindcartitem)
+    
+    for col in cart_cols:
+        purchase_carttreeview.heading(col, text=col)
+        purchase_carttreeview.grid(row=1, column=0, columnspan=2)
+        purchase_carttreeview.column(col, anchor=CENTER)
+        purchase_carttreeview.place(x=100, y=410)
+    purchase_carttreeview.column('#1', anchor=CENTER, width=250)
+    purchase_carttreeview.column('#2', anchor=CENTER, width=150)
+    
+    purchase_removebutton.place(x=530, y=440)
+    purchase_buybutton.place(x=530, y=470)
+    purchase_totallabel.place(x=530, y=500)
+    purchase_carttotal.set('Total: ₱0.00')
 
 def main_window():
     main_frame = Frame(window, width=800, height=600)
