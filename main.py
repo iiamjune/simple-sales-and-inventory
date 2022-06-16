@@ -14,8 +14,6 @@ style = ttk.Style()
 style.theme_use("clam")
 
 global items_dict
-total = StringVar()
-balance = IntVar()
 addinput_itemname = StringVar()
 addinput_price = StringVar()
 addinput_quantity = StringVar()
@@ -27,6 +25,7 @@ purchaseinput_search = StringVar()
 purchaseinput_itemname = StringVar()
 purchaseinput_quantity = StringVar()
 purchase_carttotal = StringVar()
+purchase_total = 0.0
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -66,7 +65,7 @@ def add_items():
         price_iscorrect = True
         item_price = float(addinput_price.get())
     
-    if not addinput_quantity.get() or float(addinput_quantity.get()) == 0:
+    if not addinput_quantity.get() or int(addinput_quantity.get()) == 0:
         quantity_iscorrect = False
         messagebox.showerror('Error', 'Please enter item quantity')
     else:
@@ -280,7 +279,7 @@ def update_item():
                 price_iscorrect = True
                 item_price = float(editinput_price.get())
             
-            if not editinput_quantity.get() or float(editinput_quantity.get()) == 0:
+            if not editinput_quantity.get() or int(editinput_quantity.get()) == 0:
                 quantity_iscorrect = False
                 messagebox.showerror('Error', 'Please enter item quantity')
             else:
@@ -451,10 +450,18 @@ def view_window():
     edit_deletebutton.place(relx=.7, y=500, anchor=CENTER)
 
 def purchase_back():
-    main_window()
-    purchaseinput_itemname.set('')
-    purchaseinput_quantity.set('')
-    purchaseinput_search.set('')
+    if len(purchase_carttreeview.get_children()) > 0:
+        confirm_abort = messagebox.askyesno('Abort Operation', f'Are you sure you want to abort this operation?')
+        if confirm_abort:
+            main_window()
+            purchaseinput_itemname.set('')
+            purchaseinput_quantity.set('')
+            purchaseinput_search.set('')
+    else:
+        main_window()
+        purchaseinput_itemname.set('')
+        purchaseinput_quantity.set('')
+        purchaseinput_search.set('')
 
 def purchase_searchitem():
     query = purchase_searchentry.get().strip().title()
@@ -482,12 +489,47 @@ def purchase_binditem(e):
         purchaseinput_quantity.set('1')
 
 def purchase_additem():
-    pass
+    itemname_iscorrect = False
+    quantity_iscorrect = False
+
+    if not purchaseinput_itemname.get() or len(purchaseinput_itemname.get().strip()) == 0:
+        itemname_iscorrect = False
+        messagebox.showerror('Error', 'Please select an item')
+    else:
+        if ' ' in purchaseinput_itemname.get():
+            messagebox.showerror('Warning', 'Item name cannot contain spaces.\nUse "-" to separate item names with more than one word.')
+        else:
+            itemname_iscorrect = True
+            item_name = purchaseinput_itemname.get().strip().title()
+            
+            if not purchaseinput_quantity.get() or int(purchaseinput_quantity.get()) == 0:
+                quantity_iscorrect = False
+                messagebox.showerror('Error', 'Please enter item quantity')
+            else:
+                quantity_iscorrect = True
+                item_quantity = int(purchaseinput_quantity.get())
+    
+    if itemname_iscorrect and quantity_iscorrect:
+        purchase_total = 0.0
+        if getInvItems()[item_name][0]['quantity'] >= item_quantity:
+            subtotal = getInvItems()[item_name][1]['price'] * item_quantity
+
+            purchase_carttreeview.insert('', 'end', values=(item_name, item_quantity, subtotal))
+
+            if len(purchase_carttreeview.get_children()) > 0:
+                purchase_removebutton.config(state=NORMAL)
+                purchase_checkoutbutton.config(state=NORMAL)
+
+            for child in purchase_carttreeview.get_children():
+                purchase_total += float(purchase_carttreeview.item(child)['values'][2])
+            purchase_carttotal.set('Total: ₱' + str(purchase_total))
+        else:
+            messagebox.showerror('Error', 'Insufficient quantity')
 
 def purchase_removeitem():
     pass
 
-def purchase_buyitems():
+def purchase_checkoutitems():
     pass
 
 def purchase_bindcartitem(e):
@@ -496,6 +538,9 @@ def purchase_bindcartitem(e):
 def purchase_window():
     global purchase_treeview
     global purchase_searchentry
+    global purchase_carttreeview
+    global purchase_removebutton
+    global purchase_checkoutbutton
 
     purchase_frame = Frame(window, width=800, height=600)
     purchase_frame.tk_setPalette(background='#E9EEF3', foreground='#2C4C71')
@@ -569,16 +614,18 @@ def purchase_window():
         purchase_frame, 
         text='Remove', 
         command=purchase_removeitem, 
+        state=DISABLED, 
         height=1, 
-        width=6, 
+        width=8, 
         background='#2C4C71', 
         foreground='#E9EEF3')
-    purchase_buybutton = Button(
+    purchase_checkoutbutton = Button(
         purchase_frame, 
-        text='Buy', 
-        command=purchase_buyitems, 
+        text='Checkout', 
+        command=purchase_checkoutitems, 
+        state=DISABLED, 
         height=1, 
-        width=6, 
+        width=8, 
         background='#2C4C71', 
         foreground='#E9EEF3')
     purchase_totallabel = Label(
@@ -622,13 +669,13 @@ def purchase_window():
     purchase_quantityentry.place(x=420, y=380)
     purchase_addbutton.place(x=530, y=370)
 
-    cart_cols = ('Item Name', 'Subtotal')
+    cart_cols = ('Item Name', 'Quantity', 'Subtotal')
     purchase_carttreeview = ttk.Treeview(purchase_frame, columns=cart_cols, show='headings', height=6)
 
     if len(invItems) == 0:
         purchase_carttreeview.unbind('<ButtonRelease-1>')
         purchase_removebutton.config(state='disabled')
-        purchase_buybutton.config(state='disabled')
+        purchase_checkoutbutton.config(state='disabled')
     else:
         purchase_carttreeview.bind('<ButtonRelease-1>', purchase_bindcartitem)
     
@@ -637,11 +684,12 @@ def purchase_window():
         purchase_carttreeview.grid(row=1, column=0, columnspan=2)
         purchase_carttreeview.column(col, anchor=CENTER)
         purchase_carttreeview.place(x=100, y=410)
-    purchase_carttreeview.column('#1', anchor=CENTER, width=250)
-    purchase_carttreeview.column('#2', anchor=CENTER, width=150)
+    purchase_carttreeview.column('#1', anchor=CENTER, width=200)
+    purchase_carttreeview.column('#2', anchor=CENTER, width=80)
+    purchase_carttreeview.column('#3', anchor=CENTER, width=120)
     
     purchase_removebutton.place(x=530, y=440)
-    purchase_buybutton.place(x=530, y=470)
+    purchase_checkoutbutton.place(x=530, y=470)
     purchase_totallabel.place(x=530, y=500)
     purchase_carttotal.set('Total: ₱0.00')
 
