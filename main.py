@@ -26,6 +26,7 @@ purchaseinput_itemname = StringVar()
 purchaseinput_quantity = StringVar()
 purchase_carttotal = StringVar()
 purchase_total = 0.0
+purchase_subtotal = 0.0
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -515,6 +516,8 @@ def purchase_additem():
             subtotal = getInvItems()[item_name][1]['price'] * item_quantity
 
             purchase_carttreeview.insert('', 'end', values=(item_name, item_quantity, subtotal))
+            purchaseinput_itemname.set('')
+            purchaseinput_quantity.set('')
 
             if len(purchase_carttreeview.get_children()) > 0:
                 purchase_removebutton.config(state=NORMAL)
@@ -522,18 +525,31 @@ def purchase_additem():
 
             for child in purchase_carttreeview.get_children():
                 purchase_total += float(purchase_carttreeview.item(child)['values'][2])
-            purchase_carttotal.set('Total: ₱' + str(purchase_total))
+            purchase_carttotal.set('Total: ₱' + str('{:.2f}'.format(purchase_total)))
         else:
             messagebox.showerror('Error', 'Insufficient quantity')
 
 def purchase_removeitem():
-    pass
+    selected_item = purchase_carttreeview.selection()[0]
+    purchase_carttotal.set('Total: ₱' + str('{:.2f}'.format(float(purchase_carttotal.get().split('₱')[1]) - float(purchase_carttreeview.item(selected_item)['values'][2]))))
+    purchase_carttreeview.delete(selected_item)
+    
+    if len(purchase_carttreeview.get_children()) == 0:
+        purchase_removebutton.config(state=DISABLED)
+        purchase_checkoutbutton.config(state=DISABLED)
 
 def purchase_checkoutitems():
     pass
 
 def purchase_bindcartitem(e):
-    pass
+    value_list = []
+    selected_item = purchase_carttreeview.focus()
+    for value in purchase_carttreeview.item(selected_item)['values']:
+        value_list.append(value)
+    if len(value_list) > 0:
+        global purchase_subtotal
+        purchase_subtotal = 0.0
+        purchase_subtotal += float(value_list[2])
 
 def purchase_window():
     global purchase_treeview
