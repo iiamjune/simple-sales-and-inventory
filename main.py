@@ -3,7 +3,9 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import os.path
+import os
 from turtle import width
+from datetime import datetime
 
 window = Tk()
 window.title("Sales and Inventory")
@@ -29,6 +31,8 @@ purchase_total = 0.0
 purchase_subtotal = 0.0
 purchase_checkoutitemname = StringVar()
 purchase_checkoutquantity = StringVar()
+purchase_checkoutinvoice = StringVar()
+purchase_checkoutdatetime = StringVar()
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -93,18 +97,18 @@ def add_items_to_file(items_dict: dict, clear: bool, message: str):
         f.close()
         with open('inventory.txt', 'a') as file:
             for item in items_dict:
-                file.write(f"{item}: {items_dict[item]}")
+                file.write(f'{item}: {items_dict[item]}')
                 file.write('\n')
             messagebox.showinfo('Success', message)
         return
     invItems = getInvItems()
-
+    
     for item in invItems:
         if item in items_dict:
             items_dict[item] += invItems[item]
     with open('inventory.txt', 'a') as file:
         for item in items_dict:
-            file.write(f"{item}: {items_dict[item]}")
+            file.write(f'{item}: {items_dict[item]}')
             file.write('\n')
         messagebox.showinfo('Success', message)
 
@@ -543,14 +547,125 @@ def purchase_removeitem():
         purchase_removebutton.config(state=DISABLED)
         purchase_checkoutbutton.config(state=DISABLED)
 
+def get_invoices():
+    invoice_dict = {}
+
+    if os.path.exists('invoice.txt') == False:
+        f = open('invoice.txt', 'w')
+        f.close()
+    else:
+        with open('invoice.txt', 'r') as file:
+            for line in file:
+                line = line.replace('\n','').split(' ')
+                counter, invoice_id = line[0].replace(':', ''), line[1]
+                invoice_dict.update({counter: invoice_id})
+    
+    return invoice_dict
+
+def add_invoice(invoice_dict: dict, clear: bool):
+    if clear:
+        f = open('invoice.txt', 'w')
+        f.close()
+        with open('invoice.txt', 'a') as file:
+            for invoice in invoice_dict:
+                file.write(f"{invoice}: {invoice_dict[invoice]}")
+                file.write('\n')
+        return
+    invoices = get_invoices()
+    
+    for invoice in invoices:
+        if invoice in invoice_dict:
+            invoice_dict[invoice] += invoices[invoice]
+    with open('invoice.txt', 'a') as file:
+        for invoice in invoice_dict:
+            file.write(f"{invoice}: {invoice_dict[invoice]}")
+            file.write('\n')
+
+def generate_receipt(current_datetime: str, invoice_id: str, purchase_cartdata: dict, purchase_total: str):
+    receipt_list = []
+    for file in os.listdir(os.getcwd()):
+        if file.startswith('receipt'):
+            receipt_list.append(os.path.splitext(file)[0])
+    
+    if len(receipt_list) == 0:
+        receipt_name = 'receipt-1'
+        f = open(f'{receipt_name}.txt', 'w', encoding='utf-8')
+        f.close()
+        with open(f'{receipt_name}.txt', 'a', encoding='utf-8') as file:
+            file.write('------------------------------------------------------------------\n')
+            file.write('                   Sales and Inventory System                     \n')
+            file.write('   University of Science and Technology of Southern Philippines   \n')
+            file.write('                Cagayan de Oro City, Philippines                  \n')
+            file.write('                        +63-xxx-xxx-xxxx                          \n')
+            file.write('------------------------------------------------------------------\n')
+            file.write('\n')
+            file.write(f'{current_datetime}\n')
+            file.write(f'Invoice ID: {invoice_id}\n')
+            file.write('Item Name                                           Subtotal   \n')
+            file.write('------------------------------------------------------------------\n')
+            
+            for key, value in purchase_cartdata.items():
+                file.write(f'{key}                                                            \n')
+                file.write(f"               {value[0]['quantity']} * {value[0]['price']}                           ₱{value[0]['subtotal']}\n")
+            file.write('------------------------------------------------------------------\n')
+            file.write(f"Total Amount:                                       {purchase_total.replace('Total: ','')}      \n")
+            file.write('------------------------------------------------------------------\n')
+            file.write('Cash:                                               xxxxxxxxxx            \n')
+            file.write('------------------------------------------------------------------\n')
+            file.write('Balance:                                            xxxxxxxxxx            \n')
+            file.write('******************************************************************\n')
+            file.write('                      THANK YOU COME AGAIN                        \n')
+            file.write('******************************************************************\n')
+    else:
+        receipt_list.sort()
+        receipt_list.reverse()
+        receipt_name = f"receipt-{int(receipt_list[0].split('-')[1]) + 1}"
+        f = open(f'{receipt_name}.txt', 'w', encoding='utf-8')
+        f.close()
+        with open(f'{receipt_name}.txt', 'a', encoding='utf-8') as file:
+            file.write('------------------------------------------------------------------\n')
+            file.write('                   Sales and Inventory System                     \n')
+            file.write('   University of Science and Technology of Southern Philippines   \n')
+            file.write('                Cagayan de Oro City, Philippines                  \n')
+            file.write('                        +63-xxx-xxx-xxxx                          \n')
+            file.write('------------------------------------------------------------------\n')
+            file.write('\n')
+            file.write(f'{current_datetime}\n')
+            file.write(f'Invoice ID: {invoice_id}\n')
+            file.write('Item Name                                           Subtotal   \n')
+            file.write('------------------------------------------------------------------\n')
+            
+            for key, value in purchase_cartdata.items():
+                file.write(f'{key}                                                            \n')
+                file.write(f"               {value[0]['quantity']} * {value[0]['price']}                           ₱{value[0]['subtotal']}\n")
+            file.write('------------------------------------------------------------------\n')
+            file.write(f"Total Amount:                                       {purchase_total.replace('Total: ','')}      \n")
+            file.write('------------------------------------------------------------------\n')
+            file.write('Cash:                                               xxxxxxxxxx            \n')
+            file.write('------------------------------------------------------------------\n')
+            file.write('Balance:                                            xxxxxxxxxx            \n')
+            file.write('******************************************************************\n')
+            file.write('                      THANK YOU COME AGAIN                        \n')
+            file.write('******************************************************************\n')
+
 def purchase_checkoutitems():
     global purchase_checkoutitemname
     global purchase_checkoutquantity
+    global purchase_checkoutdatetime
+    global purchase_checkoutinvoice
+    global purchase_cartdata
+    purchase_cartdata = {}
     invItems = getInvItems()
     
     for child in purchase_carttreeview.get_children():
         purchase_checkoutitemname.set(purchase_carttreeview.item(child)['values'][0])
         purchase_checkoutquantity.set(purchase_carttreeview.item(child)['values'][1])
+
+        cart_itemname = purchase_carttreeview.item(child)['values'][0]
+        cart_quantity = purchase_carttreeview.item(child)['values'][1]
+        cart_price = invItems[cart_itemname][1]['price']
+        cart_subtotal = purchase_carttreeview.item(child)['values'][2]
+        purchase_cartdata.update({cart_itemname: [{'quantity': cart_quantity, 'price': cart_price, 'subtotal': cart_subtotal}]})
 
         item_to_change = purchase_checkoutitemname.get()
         if item_to_change in invItems.keys():
@@ -559,10 +674,26 @@ def purchase_checkoutitems():
             invItems.update({item_to_change: [{'quantity':int(item_quantity)}, {'price':float(item_price)}]})
         else:
             messagebox.showerror('Error', 'Item does not exist!')
+    add_items_to_file(invItems, clear=True, message='Cart checked out successfully') #can be last
+
+    current_dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    purchase_checkoutdatetime.set(current_dt)
     
-    add_items_to_file(invItems, clear=True, message='Cart checked out successfully')
+    invoices = get_invoices()
+    counter_list = list(invoices.keys())
+    if len(invoices) == 0:
+        invoice_id = 'SI'+'1'.zfill(4)
+        invoices.update({1: invoice_id})
+        add_invoice(invoices, clear=False)
+        purchase_checkoutinvoice.set(invoice_id)
+    else:
+        invoice_id = 'SI' + str(int(max(counter_list)) + 1).zfill(4)
+        invoices[int(max(counter_list)) + 1] = invoice_id
+        add_invoice(invoices, clear=True)
+        purchase_checkoutinvoice.set(invoice_id)
+    
+    generate_receipt(purchase_checkoutdatetime.get(), purchase_checkoutinvoice.get(), purchase_cartdata, purchase_carttotal.get())
     purchase_window()
-    #receipt
 
 def purchase_bindcartitem(e):
     value_list = []
