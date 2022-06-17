@@ -229,14 +229,15 @@ def view_back():
 def view_binditem(e):
     value_list = []
     selected_item = view_treeview.focus()
-    for value in view_treeview.item(selected_item)['values']:
-        value_list.append(value)
-    editinput_itemname.set('')
-    editinput_itemname.set(str(value_list[0]))
-    editinput_quantity.set('')
-    editinput_quantity.set(str(value_list[1]))
-    editinput_price.set('')
-    editinput_price.set(str(value_list[2]))
+    if selected_item:
+        for value in view_treeview.item(selected_item)['values']:
+            value_list.append(value)
+        editinput_itemname.set('')
+        editinput_itemname.set(str(value_list[0]))
+        editinput_quantity.set('')
+        editinput_quantity.set(str(value_list[1]))
+        editinput_price.set('')
+        editinput_price.set(str(value_list[2]))
 
 def delete_item():
     itemname_iscorrect = False
@@ -426,7 +427,7 @@ def view_window():
         edit_priceentry.config(state='disabled')
         edit_updatebutton.config(state='disabled')
         edit_deletebutton.config(state='disabled')
-        messagebox.showerror('Error', 'No items in inventory')
+        messagebox.showinfo('Info', 'No items in inventory')
     else:
         view_treeview.bind('<ButtonRelease-1>', view_binditem)
 
@@ -539,13 +540,17 @@ def purchase_additem():
             messagebox.showerror('Error', 'Insufficient quantity')
 
 def purchase_removeitem():
-    selected_item = purchase_carttreeview.selection()[0]
-    purchase_carttotal.set('Total: ₱' + str('{:.2f}'.format(float(purchase_carttotal.get().split('₱')[1]) - float(purchase_carttreeview.item(selected_item)['values'][2]))))
-    purchase_carttreeview.delete(selected_item)
-    
-    if len(purchase_carttreeview.get_children()) == 0:
-        purchase_removebutton.config(state=DISABLED)
-        purchase_checkoutbutton.config(state=DISABLED)
+    current_row = purchase_carttreeview.focus()
+    if not current_row:
+        messagebox.showinfo('Info', 'No item selected')
+    else:
+        selected_item = purchase_carttreeview.selection()[0]
+        purchase_carttotal.set('Total: ₱' + str('{:.2f}'.format(float(purchase_carttotal.get().split('₱')[1]) - float(purchase_carttreeview.item(selected_item)['values'][2]))))
+        purchase_carttreeview.delete(selected_item)
+        
+        if len(purchase_carttreeview.get_children()) == 0:
+            purchase_removebutton.config(state=DISABLED)
+            purchase_checkoutbutton.config(state=DISABLED)
 
 def get_invoices():
     invoice_dict = {}
@@ -815,7 +820,7 @@ def purchase_window():
         purchase_searchbutton.config(state='disabled')
         purchase_quantityentry.config(state='disabled')
         purchase_addbutton.config(state='disabled')
-        messagebox.showerror('Error', 'No items in inventory')
+        messagebox.showinfo('Info', 'No items in inventory')
     else:
         purchase_treeview.bind('<ButtonRelease-1>', purchase_binditem)
 
