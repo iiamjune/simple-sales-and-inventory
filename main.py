@@ -27,6 +27,8 @@ purchaseinput_quantity = StringVar()
 purchase_carttotal = StringVar()
 purchase_total = 0.0
 purchase_subtotal = 0.0
+purchase_checkoutitemname = StringVar()
+purchase_checkoutquantity = StringVar()
 
 def only_numbersdecimal(char):
     return char.isdigit() or char == '.'
@@ -489,6 +491,9 @@ def purchase_binditem(e):
         purchaseinput_quantity.set('')
         purchaseinput_quantity.set('1')
 
+        if purchaseinput_itemname.get() != '':
+            purchase_addbutton.config(state=NORMAL)
+
 def purchase_additem():
     itemname_iscorrect = False
     quantity_iscorrect = False
@@ -539,7 +544,25 @@ def purchase_removeitem():
         purchase_checkoutbutton.config(state=DISABLED)
 
 def purchase_checkoutitems():
-    pass
+    global purchase_checkoutitemname
+    global purchase_checkoutquantity
+    invItems = getInvItems()
+    
+    for child in purchase_carttreeview.get_children():
+        purchase_checkoutitemname.set(purchase_carttreeview.item(child)['values'][0])
+        purchase_checkoutquantity.set(purchase_carttreeview.item(child)['values'][1])
+
+        item_to_change = purchase_checkoutitemname.get()
+        if item_to_change in invItems.keys():
+            item_quantity = invItems[item_to_change][0]['quantity'] - int(purchase_checkoutquantity.get())
+            item_price = invItems[item_to_change][1]['price']
+            invItems.update({item_to_change: [{'quantity':int(item_quantity)}, {'price':float(item_price)}]})
+        else:
+            messagebox.showerror('Error', 'Item does not exist!')
+    
+    add_items_to_file(invItems, clear=True, message='Cart checked out successfully')
+    purchase_window()
+    #receipt
 
 def purchase_bindcartitem(e):
     value_list = []
@@ -555,6 +578,7 @@ def purchase_window():
     global purchase_treeview
     global purchase_searchentry
     global purchase_carttreeview
+    global purchase_addbutton
     global purchase_removebutton
     global purchase_checkoutbutton
 
@@ -622,6 +646,7 @@ def purchase_window():
         purchase_frame, 
         text='Add', 
         command=purchase_additem, 
+        state=DISABLED, 
         height=1, 
         width=5, 
         background='#2C4C71', 
