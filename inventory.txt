@@ -1,2 +1,2 @@
-Redmi-Note-10: [{'quantity': 30}, {'price': 9999.0}]
-Realme-Narzo-20: [{'quantity': 22}, {'price': 7999.0}]
+Redmi-Note-10: [{'quantity': 29}, {'price': 9999.0}]
+Realme-Narzo-20: [{'quantity': 21}, {'price': 7999.0}]
