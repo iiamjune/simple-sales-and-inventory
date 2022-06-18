@@ -1,10 +1,8 @@
-from ctypes import alignment
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import os.path
 import os
-from turtle import width
 from datetime import datetime
 
 window = Tk()
